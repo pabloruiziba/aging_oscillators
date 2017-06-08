@@ -112,7 +112,7 @@ class Patient(object):
     def draw_graph(self):
         with open(self.connectivity_path) as f:
             C = [map(float, line.split()) for line in f]      
-        C = C/np.max(C)
+        C = C/np.max(C) 
         G=nx.from_numpy_matrix(C)
         pos = nx.circular_layout(G)
         elarge=[(u,v) for (u,v,d) in G.edges(data=True) if d['weight'] >0.5]
@@ -131,10 +131,29 @@ class Patient(object):
         plt.axis('off')
         plt.show()
 
-model = Patient('APOE-4_19')
+    def graph_statistics(self):
+        with open(self.connectivity_path) as f:
+            C = [map(float, line.split()) for line in f]      
+        C = C/np.max(C)
+        G=nx.from_numpy_matrix(C)
 
-#model.draw_connectome()
+        print("Radius (minimum excentricity): %d" % nx.radius(G))
+        print("Diameter (shortes distance between most distant nodes): %d" % nx.diameter(G))
+        print("Density: %s" % nx.density(G))
+        print("Number of edges: %s" % G.number_of_edges())
+        print("Avg. path length: %s" % nx.average_shortest_path_length(G))
+        print("Avg. degree: %s" % str(sum(G.degree().values())/float(len(G))))
+        print("Avg. clustering: %f" % nx.average_clustering(G))
+
+
+
+
+
+
+model = Patient('APOE-3_02')
+
 
 model.draw_graph()
+#model.graph_statistics()
 
 
