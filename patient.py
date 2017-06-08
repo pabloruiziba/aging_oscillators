@@ -1,6 +1,15 @@
 import os
 import urllib
 
+#Networkx
+import numpy as np
+import networkx as nx
+import matplotlib.pyplot as plt
+from networkx.drawing.nx_agraph import graphviz_layout
+import random
+import csv
+import nx2tikz
+
 class Patient(object):
 
     #print(dict_ages['APOE-4-01'])
@@ -66,6 +75,7 @@ class Patient(object):
                     }
 
         if p_name is None:
+            print('Using deffault patient')
             self.id = 'APOE-4_01'
         else:
             self.id = p_name
@@ -75,18 +85,18 @@ class Patient(object):
             #UCLA_CCN_APOE_DTI_APOE-4_1_connectmat.txt
             #printing patient info:
             
-            if os.path.exists('data/'):
-                print('dir data exists')
-                if os.path.exists('data/connectivity/'):
-                    print('subdir connectivity exists')
-                    print('data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt')
-                    if os.path.exists('data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt'):
-                        print('connectivity file exists')
-                    else:
-                        #download patient file
-                        file = urllib.URLopener()
-                        file.retrieve('https://raw.githubusercontent.com/pabloruiziba/aging_oscillators/master/data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt',
-                                      'data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt')
+            if os.path.exists('data/connectivity'):
+                if not os.path.exists('data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt'):
+                    file = urllib.URLopener()
+                    file.retrieve('https://raw.githubusercontent.com/pabloruiziba/aging_oscillators/master/data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt',
+                                  'data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt')
+            else:
+                os.makedirs('data/connectivity')
+                file = urllib.URLopener()
+                file.retrieve('https://raw.githubusercontent.com/pabloruiziba/aging_oscillators/master/data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt',
+                              'data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt')
+
+            self.connectivity_path = 'data/connectivity/UCLA_CCN_APOE_DTI_'+self.id+'_connectmat.txt'
 
             print('##################################################')
             print('Id: '+self.id+', Age:'+str(self.age))        
@@ -98,13 +108,33 @@ class Patient(object):
             print('Patient id does not exist or was misspelled!!!')
             print('##################################################')
             quit()
-#        except:
-#            print('##################################################')
-#            print('An error ocurred, program stopped')
-#            print('##################################################')
-#            quit()
+
+    def draw_graph(self):
+        with open(self.connectivity_path) as f:
+            C = [map(float, line.split()) for line in f]      
+        C = C/np.max(C)
+        G=nx.from_numpy_matrix(C)
+        pos = nx.circular_layout(G)
+        elarge=[(u,v) for (u,v,d) in G.edges(data=True) if d['weight'] >0.5]
+        emedium=[(u,v) for (u,v,d) in G.edges(data=True) if (d['weight'] <=0.5 and d['weight'] >0.1)]
+        esmall=[(u,v) for (u,v,d) in G.edges(data=True) if d['weight'] <=0.1]
+        # nodes
+        nx.draw_networkx_nodes(G,pos,node_size=30)
+        # edges
+        nx.draw_networkx_edges(G,pos,edgelist=elarge,
+                            width=1.5)
+        nx.draw_networkx_edges(G,pos,edgelist=emedium,
+                            width=0.8,alpha=0.5,edge_color='b')
+        nx.draw_networkx_edges(G,pos,edgelist=esmall,
+                            width=0.8,alpha=0.2,edge_color='g')
+        #nx.draw(G)
+        plt.axis('off')
+        plt.show()
+
+model = Patient('APOE-4_19')
+
+#model.draw_connectome()
+
+model.draw_graph()
 
 
-
-        
-Patient('APOE-4_03')
