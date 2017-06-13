@@ -1,3 +1,7 @@
+from __future__ import division
+#import numpy as np
+#import matplotlib.pyplot as plt
+
 import os
 import urllib
 
@@ -145,15 +149,29 @@ class Patient(object):
         print("Avg. degree: %s" % str(sum(G.degree().values())/float(len(G))))
         print("Avg. clustering: %f" % nx.average_clustering(G))
 
+#model = Patient('APOE-3_02')
 
-
-
-
-
-model = Patient('APOE-3_02')
-
-
-model.draw_graph()
+#model.draw_graph()
 #model.graph_statistics()
 
 
+
+
+signal = np.genfromtxt('test.txt', delimiter=',')
+
+signal = signal-2.5
+
+ps = np.abs(np.fft.fft(signal))**2
+
+time_step = 0.1/1000
+freqs = np.fft.fftfreq(signal.size, time_step)
+idx = np.argsort(freqs)
+
+
+
+plt.plot(freqs[idx], ps[idx])
+
+plt.yscale('log')
+
+
+plt.show()
